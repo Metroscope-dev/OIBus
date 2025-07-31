@@ -78,7 +78,7 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
 
     // Group values by timestamp to create snapshots
     const snapshotMap = new Map<string, Map<string, number>>();
-    
+
     for (const value of values) {
       const iso8601Timestamp = this.ensureISO8601Format(value.timestamp);
       const pointId = value.pointId;
@@ -92,7 +92,7 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
       if (!snapshotMap.has(iso8601Timestamp)) {
         snapshotMap.set(iso8601Timestamp, new Map());
       }
-      
+
       snapshotMap.get(iso8601Timestamp)!.set(pointId, numericValue);
     }
 
@@ -102,7 +102,7 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
     for (let i = 0; i < snapshotEntries.length; i++) {
       const [iso8601Timestamp, sensorValues] = snapshotEntries[i];
       const sensorValuesArray: Array<SensorValue> = [];
-      
+
       const sensorValueEntries = Array.from(sensorValues.entries());
       for (let j = 0; j < sensorValueEntries.length; j++) {
         const [sensorTag, value] = sensorValueEntries[j];
@@ -138,7 +138,7 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'APIKEY': this.connector.settings.apiKey
+      APIKEY: this.connector.settings.apiKey
     };
 
     let response: ReqResponse;
@@ -176,7 +176,7 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'APIKEY': this.connector.settings.apiKey
+      APIKEY: this.connector.settings.apiKey
     };
 
     let response: ReqResponse;
@@ -205,12 +205,12 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
     if (typeof value === 'number') {
       return isNaN(value) ? null : value;
     }
-    
+
     if (typeof value === 'string') {
       const parsed = parseFloat(value);
       return isNaN(parsed) ? null : parsed;
     }
-    
+
     return null;
   }
 
@@ -223,12 +223,12 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
     try {
       // Try to parse the timestamp as a Date
       const date = new Date(timestamp);
-      
+
       // Check if the date is valid
       if (isNaN(date.getTime())) {
         throw new Error(`Invalid timestamp: ${timestamp}`);
       }
-      
+
       // Return ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
       return date.toISOString();
     } catch (error) {

@@ -86,7 +86,7 @@ describe('NorthMetroscopeLithium', () => {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'APIKEY': 'test-api-key'
+        APIKEY: 'test-api-key'
       },
       body: JSON.stringify({
         sourceId: 'oibus',
@@ -169,7 +169,7 @@ describe('NorthMetroscopeLithium', () => {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'APIKEY': 'test-api-key'
+        APIKEY: 'test-api-key'
       },
       body: JSON.stringify(expectedPayload),
       timeout: 30000
@@ -201,7 +201,7 @@ describe('NorthMetroscopeLithium', () => {
     });
 
     expect(HTTPRequest).toHaveBeenCalledWith(
-      new URL(endpoint), 
+      new URL(endpoint),
       expect.objectContaining({
         body: expect.stringContaining('"label":""')
       })
@@ -253,7 +253,7 @@ describe('NorthMetroscopeLithium', () => {
     };
 
     expect(HTTPRequest).toHaveBeenCalledWith(
-      new URL(endpoint), 
+      new URL(endpoint),
       expect.objectContaining({
         body: JSON.stringify(expectedPayload)
       })
@@ -336,7 +336,7 @@ describe('NorthMetroscopeLithium', () => {
     };
 
     expect(HTTPRequest).toHaveBeenCalledWith(
-      new URL(endpoint), 
+      new URL(endpoint),
       expect.objectContaining({
         body: JSON.stringify(expectedPayload)
       })
@@ -459,7 +459,7 @@ describe('NorthMetroscopeLithium', () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'APIKEY': 'test-api-key'
+          APIKEY: 'test-api-key'
         },
         body: JSON.stringify({
           sourceId: 'oibus',
