@@ -16,7 +16,7 @@ import { NorthConnectorEntity } from '../../model/north-connector.model';
 import { NorthMetroscopeLithiumSettings } from '../../../shared/model/north-settings.model';
 import { OIBusTimeValue } from '../../../shared/model/engine.model';
 import testData from '../../tests/utils/test-data';
-import { HTTPRequest, ReqProxyOptions, ReqResponse, retryableHttpStatusCodes } from '../../service/http-request.utils';
+import { HTTPRequest } from '../../service/http-request.utils';
 import { createMockResponse } from '../../tests/__mocks__/undici.mock';
 import { OIBusError } from '../../model/engine.model';
 import { mockBaseFolders } from '../../tests/utils/test-utils';
@@ -33,7 +33,7 @@ const endpoint = 'https://lithium.metroscope.io/api/open/import';
 const settings: NorthMetroscopeLithiumSettings = {
   endpoint,
   apiKey: 'test-api-key',
-  sourceId: 'oibus',
+  sourceId: 'oibus-test',
   group: 'cycle',
   label: 'test-label',
   timeout: 30,
@@ -89,7 +89,7 @@ describe('NorthMetroscopeLithium', () => {
         APIKEY: 'test-api-key'
       },
       body: JSON.stringify({
-        sourceId: 'oibus',
+        sourceId: 'oibus-test',
         snapshots: []
       }),
       timeout: 30000
@@ -130,7 +130,7 @@ describe('NorthMetroscopeLithium', () => {
     });
 
     const expectedPayload = {
-      sourceId: 'oibus',
+      sourceId: 'oibus-test',
       snapshots: [
         {
           date: '2025-07-30T14:24:37.000Z',
@@ -234,7 +234,7 @@ describe('NorthMetroscopeLithium', () => {
     });
 
     const expectedPayload = {
-      sourceId: 'oibus',
+      sourceId: 'oibus-test',
       snapshots: [
         {
           date: '2025-07-30T14:24:37.000Z',
@@ -304,7 +304,7 @@ describe('NorthMetroscopeLithium', () => {
 
     // Should normalize timestamps to ISO 8601 format
     const expectedPayload = {
-      sourceId: 'oibus',
+      sourceId: 'oibus-test',
       snapshots: [
         {
           date: '2025-07-30T14:24:37.000Z', // Normalized
@@ -462,7 +462,7 @@ describe('NorthMetroscopeLithium', () => {
           APIKEY: 'test-api-key'
         },
         body: JSON.stringify({
-          sourceId: 'oibus',
+          sourceId: 'oibus-test',
           snapshots: []
         }),
         proxy: {
