@@ -22,8 +22,7 @@ const manifest: NorthConnectorManifest = {
       type: 'OibSecret',
       translationKey: 'north.metroscope-lithium.api-key',
       defaultValue: '',
-      displayInViewMode: false,
-      validators: [{ key: 'required' }]
+      displayInViewMode: false
     },
     {
       key: 'sourceId',
