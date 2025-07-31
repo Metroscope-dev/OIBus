@@ -365,7 +365,7 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
       return String(JSON.stringify(error));
     }
 
-    const errors: Array<Error> = [error];
+    const errors: Array<Error> = error instanceof AggregateError ? error.errors : [error];
 
     const messages: Array<string> = [];
 

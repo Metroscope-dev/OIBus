@@ -5,9 +5,9 @@ jest.mock('../../service/http-request.utils');
 import fs from 'node:fs/promises';
 import NorthMetroscopeLithium from './north-metroscope-lithium';
 import pino from 'pino';
-import PinoLogger from '../../tests/__mocks__/logger.mock';
+import PinoLogger from '../../tests/__mocks__/service/logger/logger.mock';
 import EncryptionService from '../../service/encryption.service';
-import EncryptionServiceMock from '../../tests/__mocks__/encryption-service.mock';
+import EncryptionServiceMock from '../../tests/__mocks__/service/encryption-service.mock';
 import NorthConnectorRepository from '../../repository/config/north-connector.repository';
 import NorthConnectorRepositoryMock from '../../tests/__mocks__/repository/config/north-connector-repository.mock';
 import ScanModeRepository from '../../repository/config/scan-mode.repository';
@@ -190,14 +190,6 @@ describe('NorthMetroscopeLithium', () => {
       contentType: 'time-values',
       source: 'south',
       options: {}
-    });
-
-    const expectedPayload = expect.objectContaining({
-      snapshots: expect.arrayContaining([
-        expect.objectContaining({
-          label: ''
-        })
-      ])
     });
 
     expect(HTTPRequest).toHaveBeenCalledWith(
