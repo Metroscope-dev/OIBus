@@ -1,4 +1,3 @@
-import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 
 import NorthConnector from '../north-connector';
@@ -98,14 +97,10 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
 
     // Convert grouped values to snapshots
     const snapshots: Array<Snapshot> = [];
-    const snapshotEntries = Array.from(snapshotMap.entries());
-    for (let i = 0; i < snapshotEntries.length; i++) {
-      const [iso8601Timestamp, sensorValues] = snapshotEntries[i];
+    for (const [iso8601Timestamp, sensorValues] of snapshotMap.entries()) {
       const sensorValuesArray: Array<SensorValue> = [];
 
-      const sensorValueEntries = Array.from(sensorValues.entries());
-      for (let j = 0; j < sensorValueEntries.length; j++) {
-        const [sensorTag, value] = sensorValueEntries[j];
+      for (const [sensorTag, value] of sensorValues.entries()) {
         sensorValuesArray.push({
           sensorTag,
           mean: value

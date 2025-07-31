@@ -199,7 +199,8 @@
       "file-writer": "File writer",
       "oianalytics": "OIAnalytics®",
       "sftp": "SFTP",
-      "rest": "REST"
+      "rest": "REST",
+      "metroscope-lithium": "Metroscope Lithium"
     },
     "oibus-north-type-description": {
       "aws-s3": "Store files in Amazon S3™ (Simple Storage Service)",
@@ -208,7 +209,8 @@
       "file-writer": "Write files and data to the output folder",
       "oianalytics": "Send files and values to OIAnalytics®",
       "sftp": "Upload files and data to an SFTP server",
-      "rest": "Upload files to a REST endpoint"
+      "rest": "Upload files to a REST endpoint",
+      "metroscope-lithium": "Send data to a Metroscope Lithium endpoint"
     },
     "oibus-south-category": {
       "iot": "IOT",
@@ -1712,6 +1714,18 @@
         "key": "Key",
         "value": "Value"
       },
+      "use-proxy": "Use proxy",
+      "proxy-url": "Proxy URL",
+      "proxy-username": "Proxy username",
+      "proxy-password": "Proxy password"
+    },
+    "metroscope-lithium": {
+      "endpoint": "Lithium endpoint",
+      "api-key": "API key",
+      "source-id": "Source ID",
+      "timeout": "Timeout",
+      "group": "Group",
+      "label": "Label",
       "use-proxy": "Use proxy",
       "proxy-url": "Proxy URL",
       "proxy-username": "Proxy username",
