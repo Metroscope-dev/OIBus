@@ -134,7 +134,10 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
    * Send payload to Metroscope Lithium API
    */
   private async sendToMetroscope(payload: MetroscopeLithiumPayload): Promise<void> {
-    if (!this.connector.settings.apiKey) {
+    // Decrypt the API key since it's encrypted
+    const decryptedApiKey = await this.encryptionService.decryptText(this.connector.settings.apiKey);
+
+    if (!decryptedApiKey || decryptedApiKey.trim() === '') {
       throw new OIBusError('API key is required for Metroscope Lithium connector', false);
     }
 
@@ -142,11 +145,33 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      APIKEY: this.connector.settings.apiKey
+      APIKEY: decryptedApiKey
     };
+
+    // Debug logging - log the request details
+    this.logger.debug(`Sending PATCH request to Metroscope Lithium:
+  Endpoint: ${endpoint.toString()}
+  Headers: ${JSON.stringify({ ...headers, APIKEY: '[REDACTED]' }, null, 2)}
+  Payload size: ${payload.snapshots.length} snapshots
+  Payload preview: ${JSON.stringify(
+    {
+      sourceId: payload.sourceId,
+      snapshotCount: payload.snapshots.length,
+      firstSnapshot: payload.snapshots[0] || null,
+      lastSnapshot: payload.snapshots[payload.snapshots.length - 1] || null
+    },
+    null,
+    2
+  )}`);
+
+    // Optionally log full payload (warning: can be large!)
+    if (this.logger.level === 'trace') {
+      this.logger.trace(`Full payload being sent: ${JSON.stringify(payload, null, 2)}`);
+    }
 
     let response: ReqResponse;
     try {
+      const startTime = Date.now();
       response = await HTTPRequest(endpoint, {
         method: 'PATCH',
         headers,
@@ -154,22 +179,56 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
         proxy: this.getProxyOptions(),
         timeout: this.connector.settings.timeout * 1000
       });
+      const duration = Date.now() - startTime;
+
+      this.logger.debug(`PATCH request completed in ${duration}ms with status ${response.statusCode}`);
+      this.logger.debug(`PATCH response headers: ${JSON.stringify(response.headers, null, 2)}`);
     } catch (error) {
       const message = this.getMessageFromError(error);
+      this.logger.error(`PATCH request failed: ${message}`);
       throw new OIBusError(`Failed to reach Metroscope Lithium endpoint ${endpoint}; ${message}`, true);
     }
 
+    // Always log response details for debugging
+    const responseText = await response.body.text();
+    this.logger.info(`Metroscope PATCH Response:
+  Status: ${response.statusCode}
+  Content-Length: ${response.headers['content-length'] || 'unknown'}
+  Content-Type: ${response.headers['content-type'] || 'unknown'}
+  Response Body: ${responseText || '(empty)'}`);
+
     if (!response.ok) {
+      this.logger.error(`PATCH request failed with status ${response.statusCode}: ${responseText}`);
       throw new OIBusError(
-        `HTTP request failed with status code ${response.statusCode} and message: ${await response.body.text()}`,
+        `HTTP request failed with status code ${response.statusCode} and message: ${responseText}`,
         retryableHttpStatusCodes.includes(response.statusCode)
       );
     }
 
+    // Log successful response
     this.logger.info(`Successfully sent ${payload.snapshots.length} snapshots to Metroscope Lithium`);
   }
 
   override async testConnection(): Promise<void> {
+    // Decrypt the API key since it's encrypted during test
+    const decryptedApiKey = await this.encryptionService.decryptText(this.connector.settings.apiKey);
+
+    // Debug: Log the actual API key state
+    this.logger.info(`Debug API Key info:
+  - apiKey exists: ${!!this.connector.settings.apiKey}
+  - apiKey type: ${typeof this.connector.settings.apiKey}
+  - apiKey length (encrypted): ${this.connector.settings.apiKey?.length || 0}
+  - apiKey length (decrypted): ${decryptedApiKey?.length || 0}
+  - apiKey value (encrypted): "${this.connector.settings.apiKey}" (showing encrypted value for debugging)
+  - apiKey value (decrypted): "${decryptedApiKey}" (showing decrypted value for debugging)`);
+
+    if (!decryptedApiKey || decryptedApiKey.trim() === '') {
+      throw new OIBusError('API key is required for Metroscope Lithium connector', false);
+    }
+
+    // Enable debug logging for this test
+    this.logger.level = 'debug';
+
     // For testing, we'll send an empty payload to verify the API key and endpoint are valid
     const testPayload: MetroscopeLithiumPayload = {
       sourceId: this.connector.settings.sourceId,
@@ -180,11 +239,18 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      APIKEY: this.connector.settings.apiKey
+      APIKEY: decryptedApiKey
     };
+
+    // Debug logging for test connection
+    this.logger.debug(`Testing connection to Metroscope Lithium:
+  Endpoint: ${endpoint.toString()}
+  Headers: ${JSON.stringify({ ...headers, APIKEY: '[REDACTED]' }, null, 2)}
+  Test payload: ${JSON.stringify(testPayload, null, 2)}`);
 
     let response: ReqResponse;
     try {
+      const startTime = Date.now();
       response = await HTTPRequest(endpoint, {
         method: 'PATCH',
         headers,
@@ -192,20 +258,37 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
         proxy: this.getProxyOptions(),
         timeout: this.connector.settings.timeout * 1000
       });
+      const duration = Date.now() - startTime;
+
+      this.logger.debug(`Test connection completed in ${duration}ms with status ${response.statusCode}`);
+      this.logger.debug(`Test response headers: ${JSON.stringify(response.headers, null, 2)}`);
     } catch (error) {
       const message = this.getMessageFromError(error);
+      this.logger.error(`Test connection failed: ${message}`);
       throw new OIBusError(`Failed to reach Metroscope Lithium endpoint ${endpoint}; ${message}`, false);
     }
 
+    // Always log test response details for debugging
+    const responseText = await response.body.text();
+    this.logger.info(`Metroscope Test Connection Response:
+  Status: ${response.statusCode}
+  Content-Length: ${response.headers['content-length'] || 'unknown'}
+  Content-Type: ${response.headers['content-type'] || 'unknown'}
+  Response Body: ${responseText || '(empty)'}`);
+
     if (!response.ok) {
-      throw new OIBusError(`HTTP request failed with status code ${response.statusCode} and message: ${await response.body.text()}`, false);
+      this.logger.error(`Test connection failed with status ${response.statusCode}: ${responseText}`);
+      throw new OIBusError(`HTTP request failed with status code ${response.statusCode} and message: ${responseText}`, false);
     }
+
+    // Log successful test response
+    this.logger.info('Test connection to Metroscope Lithium successful');
   }
 
   /**
    * Parse a value to number, returns null if not a valid number
    */
-  private parseNumericValue(value: any): number | null {
+  private parseNumericValue(value: unknown): number | null {
     if (typeof value === 'number') {
       return isNaN(value) ? null : value;
     }
@@ -216,6 +299,17 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
     }
 
     return null;
+  }
+
+  /**
+   * Debug helper: Enable verbose HTTP logging for debugging API calls
+   * This will log detailed request/response information
+   */
+  enableVerboseHttpLogging(): void {
+    this.logger.info('Verbose HTTP logging enabled for Metroscope Lithium connector');
+    // You can set the logger level to 'debug' or 'trace' for more detailed logs
+    // this.logger.level = 'debug'; // Uncomment this line for debug logs
+    // this.logger.level = 'trace'; // Uncomment this line for trace logs (includes full payloads)
   }
 
   /**
@@ -278,23 +372,18 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
 
     const errors: Array<Error> = [error];
 
-    // Handle AggregateError if available (Node.js 15+)
-    if ('errors' in error && Array.isArray((error as any).errors)) {
-      errors.push(...(error as any).errors);
-    }
-
     const messages: Array<string> = [];
 
-    for (const error of errors) {
+    for (const err of errors) {
       let code: string | number | undefined = undefined;
       let message: string | undefined = undefined;
 
-      if (error.message) {
-        message = `message: ${error.message}`;
+      if (err.message) {
+        message = `message: ${err.message}`;
       }
 
-      if ('code' in error && error.code && (typeof error.code === 'string' || typeof error.code === 'number')) {
-        code = `code: ${error.code}`;
+      if ('code' in err && err.code && (typeof err.code === 'string' || typeof err.code === 'number')) {
+        code = `code: ${err.code}`;
       }
 
       if ([message, code].filter(Boolean).length) {
