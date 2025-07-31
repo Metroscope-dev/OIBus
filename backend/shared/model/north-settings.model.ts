@@ -79,7 +79,7 @@ export interface NorthFileWriterSettings {
 
 export interface NorthMetroscopeLithiumSettings {
   endpoint: string;
-  apiKey: string;
+  apiKey: string | null;
   sourceId: string;
   group: string;
   label: string | null;

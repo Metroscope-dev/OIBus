@@ -134,6 +134,10 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
    * Send payload to Metroscope Lithium API
    */
   private async sendToMetroscope(payload: MetroscopeLithiumPayload): Promise<void> {
+    if (!this.connector.settings.apiKey) {
+      throw new OIBusError('API key is required for Metroscope Lithium connector', false);
+    }
+
     const endpoint = new URL(this.connector.settings.endpoint);
 
     const headers: Record<string, string> = {
