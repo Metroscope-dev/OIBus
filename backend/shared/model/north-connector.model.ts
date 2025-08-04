@@ -13,6 +13,7 @@ export const OIBUS_NORTH_TYPES = [
   'file-writer',
   'metroscope-lithium',
   'oianalytics',
+  'postgresql',
   'sftp',
   'rest'
 ] as const;
