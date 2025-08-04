@@ -1,13 +1,15 @@
-import SouthPIWebAPI, { SouthPIWebAPISettings, SouthPIWebAPIItemSettings } from './south-pi-webapi';
+import SouthPIWebAPI from './south-pi-webapi';
+import { SouthPIWebAPISettings, SouthPIWebAPIItemSettings } from '../../../shared/model/south-settings.model';
 import { SouthConnectorEntity } from '../../model/south-connector.model';
 import EncryptionService from '../../service/encryption.service';
+import EncryptionServiceMock from '../../tests/__mocks__/service/encryption-service.mock';
 import SouthConnectorRepository from '../../repository/config/south-connector.repository';
 import SouthCacheRepository from '../../repository/cache/south-cache.repository';
 import ScanModeRepository from '../../repository/config/scan-mode.repository';
 import pino from 'pino';
 
 // Mock implementations for testing
-const mockEncryptionService = {} as EncryptionService;
+const mockEncryptionService: EncryptionService = new EncryptionServiceMock('', '');
 const mockSouthConnectorRepository = {} as SouthConnectorRepository;
 const mockSouthCacheRepository = {} as SouthCacheRepository;
 const mockScanModeRepository = {} as ScanModeRepository;

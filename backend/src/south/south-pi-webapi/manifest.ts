@@ -86,7 +86,6 @@ const manifest: SouthConnectorManifest = {
       key: 'password',
       type: 'OibSecret',
       translationKey: 'south.osisoft-pi-webapi.password',
-      validators: [{ key: 'required' }],
       class: 'col-4',
       displayInViewMode: false
     },
@@ -122,16 +121,7 @@ const manifest: SouthConnectorManifest = {
   ],
   items: {
     scanMode: 'POLL',
-    settings: [
-      {
-        key: 'pointWebId',
-        type: 'OibText',
-        translationKey: 'south.items.osisoft-pi-webapi.point-web-id',
-        validators: [{ key: 'required' }],
-        newRow: true,
-        displayInViewMode: true
-      }
-    ]
+    settings: []
   }
 };
 export default manifest;

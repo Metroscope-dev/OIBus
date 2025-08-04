@@ -10,7 +10,8 @@ import {
   SouthConnectorItemCommandDTO,
   SouthConnectorItemDTO,
   SouthConnectorItemManifest,
-  SouthConnectorManifest
+  SouthConnectorManifest,
+  AvailablePoint
 } from '../../../../../backend/shared/model/south-connector.model';
 import { ScanModeDTO } from '../../../../../backend/shared/model/scan-mode.model';
 
@@ -23,6 +24,8 @@ import { FormComponent } from '../../shared/form/form.component';
 import { SouthItemSettings, SouthSettings } from '../../../../../backend/shared/model/south-settings.model';
 import { SouthItemTestComponent } from '../south-item-test/south-item-test.component';
 import { UnsavedChangesConfirmationService } from '../../shared/unsaved-changes-confirmation.service';
+import { SouthConnectorService } from '../../services/south-connector.service';
+import { FormsModule } from '@angular/forms';
 
 // TypeScript issue with Intl: https://github.com/microsoft/TypeScript/issues/49231
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -43,13 +46,15 @@ declare namespace Intl {
     OibScanModeComponent,
     FormComponent,
     SouthItemTestComponent,
-    TranslatePipe
+    TranslatePipe,
+    FormsModule
   ]
 })
 export class EditSouthItemModalComponent {
   private modal = inject(NgbActiveModal);
   private fb = inject(NonNullableFormBuilder);
   private unsavedChangesConfirmation = inject(UnsavedChangesConfirmationService);
+  private southConnectorService = inject(SouthConnectorService);
 
   mode: 'create' | 'edit' | 'copy' = 'create';
   state = new ObservableState();
@@ -76,6 +81,15 @@ export class EditSouthItemModalComponent {
     enabled: FormControl<boolean>;
     settings: FormGroup;
   }> | null = null;
+
+  // Browse items functionality
+  availablePoints: Array<AvailablePoint> = [];
+  browsingItems = false;
+  browseError: string | null = null;
+  nameFilter = '*';
+  selectedPoint: AvailablePoint | null = null;
+  selectedPointsForBatch: Array<SouthConnectorItemCommandDTO<SouthItemSettings>> = [];
+  batchSelectionMessage: string | null = null;
 
   private timezones: ReadonlyArray<Timezone> = Intl.supportedValuesOf('timeZone');
   timezoneTypeahead: (text$: Observable<string>) => Observable<Array<Timezone>> = inMemoryTypeahead(
@@ -249,6 +263,12 @@ export class EditSouthItemModalComponent {
       return;
     }
 
+    // If we have batch selected points, return them for batch creation
+    if (this.selectedPointsForBatch.length > 0) {
+      this.modal.close({ selectAll: true, items: this.selectedPointsForBatch });
+      return;
+    }
+
     this.modal.close(this.formItem);
   }
 
@@ -259,13 +279,95 @@ export class EditSouthItemModalComponent {
       id = this.item?.id || null;
     }
 
+    const settings = { ...formValue.settings! };
+    
+    // For PI Web API, add the selected point's webId
+    if (this.southManifest?.id === 'osisoft-pi-webapi' && this.selectedPoint) {
+      settings.pointWebId = this.selectedPoint.webId || this.selectedPoint.id;
+    }
+
     return {
       id,
       enabled: formValue.enabled!,
       name: formValue.name!,
       scanModeId: this.southItemSchema!.scanMode === 'SUBSCRIPTION' ? 'subscription' : formValue.scanModeId!,
       scanModeName: null,
-      settings: formValue.settings!
+      settings
     };
+  }
+
+  // Browse items functionality
+  browseItems() {
+    if (!this.southConnectorCommand) {
+      return;
+    }
+
+    this.browsingItems = true;
+    this.browseError = null;
+    this.availablePoints = [];
+
+    const params = {
+      nameFilter: this.nameFilter,
+      maxPoints: 1000
+    };
+
+    this.southConnectorService.browseAvailableItems(this.southId, this.southConnectorCommand, params).subscribe({
+      next: (points: Array<AvailablePoint>) => {
+        this.availablePoints = points;
+        this.browsingItems = false;
+      },
+      error: error => {
+        this.browseError = error.error?.message || error.message || 'Failed to browse available items';
+        this.browsingItems = false;
+      }
+    });
+  }
+
+  selectPoint(point: AvailablePoint) {
+    // Store the selected point for later use
+    this.selectedPoint = point;
+
+    // Check if form is initialized before accessing controls
+    if (!this.form) {
+      return;
+    }
+
+    // Set the name to the point name
+    const nameControl = this.form.get('name');
+    if (nameControl) {
+      nameControl.setValue(point.name);
+    }
+
+    // Update the form settings to include the pointWebId
+    const settingsControl = this.form.get('settings');
+    if (settingsControl) {
+      const currentSettings = settingsControl.value || {};
+      settingsControl.setValue({
+        ...currentSettings,
+        pointWebId: point.webId || point.id
+      });
+      settingsControl.markAsDirty();
+    }
+  }
+
+  selectAllItems() {
+    if (this.availablePoints.length === 0) {
+      return;
+    }
+
+    // Store all points for batch creation
+    this.selectedPointsForBatch = this.availablePoints.map(point => ({
+      id: null,
+      enabled: true,
+      name: point.name,
+      scanModeId: this.southItemSchema!.scanMode === 'SUBSCRIPTION' ? 'subscription' : this.form?.get('scanModeId')?.value || null,
+      scanModeName: null,
+      settings: {
+        pointWebId: point.webId || point.id
+      }
+    }));
+
+    // Show confirmation message
+    this.batchSelectionMessage = `Selected ${this.availablePoints.length} items for batch creation. Save to add all items.`;
   }
 }

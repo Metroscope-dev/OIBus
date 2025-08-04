@@ -33,6 +33,7 @@ import { ChangePasswordCommand, UserDTO, UserCommandDTO } from '../../../shared/
 import { ScanModeCommandDTO, ScanModeDTO, ValidatedCronExpression } from '../../../shared/model/scan-mode.model';
 import { CertificateCommandDTO, CertificateDTO } from '../../../shared/model/certificate.model';
 import {
+  AvailablePoint,
   SouthConnectorCommandDTO,
   SouthConnectorDTO,
   SouthConnectorItemCommandDTO,
@@ -193,6 +194,11 @@ router.get('/api/south-types/:id', (ctx: KoaContext<void, SouthConnectorManifest
 router.get('/api/south', (ctx: KoaContext<void, Array<SouthConnectorLightDTO>>) => southConnectorController.findAll(ctx));
 router.put('/api/south/:id/test-connection', (ctx: KoaContext<SouthConnectorCommandDTO<SouthSettings, SouthItemSettings>, void>) =>
   southConnectorController.testSouthConnection(ctx)
+);
+router.put(
+  '/api/south/:id/browse-items',
+  (ctx: KoaContext<SouthConnectorCommandDTO<SouthSettings, SouthItemSettings>, Array<AvailablePoint>>) =>
+    southConnectorController.browseAvailableItems(ctx)
 );
 router.get('/api/south/:id', (ctx: KoaContext<void, SouthConnectorDTO<SouthSettings, SouthItemSettings>>) =>
   southConnectorController.findById(ctx)

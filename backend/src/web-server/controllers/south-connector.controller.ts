@@ -1,5 +1,6 @@
 import { KoaContext } from '../koa';
 import {
+  AvailablePoint,
   SouthConnectorCommandDTO,
   SouthConnectorDTO,
   SouthConnectorItemCommandDTO,
@@ -346,5 +347,29 @@ export default class SouthConnectorController {
       return ctx.badRequest((error as Error).message);
     }
     ctx.noContent();
+  }
+
+  async browseAvailableItems(
+    ctx: KoaContext<SouthConnectorCommandDTO<SouthSettings, SouthItemSettings>, Array<AvailablePoint>>
+  ): Promise<void> {
+    try {
+      const logger = ctx.app.logger.child(
+        {
+          scopeType: 'south',
+          scopeId: 'browse',
+          scopeName: 'browse'
+        },
+        { level: 'silent' }
+      );
+
+      // Extract nameFilter from query parameters
+      const nameFilter = ctx.query.nameFilter as string | undefined;
+      const maxPoints = ctx.query.maxPoints ? parseInt(ctx.query.maxPoints as string, 10) : undefined;
+
+      const result = await ctx.app.southService.browseItems(ctx.params.id, ctx.request.body!, logger, nameFilter, maxPoints);
+      ctx.ok(result);
+    } catch (error: unknown) {
+      ctx.badRequest((error as Error).message);
+    }
   }
 }

@@ -3,6 +3,7 @@ import pino from 'pino';
 
 // South imports
 import {
+  AvailablePoint,
   SouthConnectorCommandDTO,
   SouthConnectorDTO,
   SouthConnectorItemCommandDTO,
@@ -76,6 +77,8 @@ import {
   SouthOracleSettings,
   SouthPIItemSettings,
   SouthPISettings,
+  SouthPIWebAPIItemSettings,
+  SouthPIWebAPISettings,
   SouthPostgreSQLItemSettings,
   SouthPostgreSQLSettings,
   SouthSettings,
@@ -97,7 +100,7 @@ import SouthOPC from '../south/south-opc/south-opc';
 import SouthOPCUA from '../south/south-opcua/south-opcua';
 import SouthOracle from '../south/south-oracle/south-oracle';
 import SouthPI from '../south/south-pi/south-pi';
-import SouthPIWebAPI, { SouthPIWebAPISettings, SouthPIWebAPIItemSettings } from '../south/south-pi-webapi/south-pi-webapi';
+import SouthPIWebAPI from '../south/south-pi-webapi/south-pi-webapi';
 import SouthPostgreSQL from '../south/south-postgresql/south-postgresql';
 import SouthSFTP from '../south/south-sftp/south-sftp';
 import SouthSQLite from '../south/south-sqlite/south-sqlite';
@@ -436,6 +439,53 @@ export default class SouthService {
       error: 'baseErrorFolder'
     });
     return await south.testItem(testItemToRun, testingSettings, callback);
+  }
+
+  async browseItems<S extends SouthSettings, I extends SouthItemSettings>(
+    id: string,
+    command: SouthConnectorCommandDTO<S, I>,
+    logger: pino.Logger,
+    nameFilter?: string,
+    maxPoints?: number
+  ): Promise<Array<AvailablePoint>> {
+    let southConnector: SouthConnectorEntity<S, I> | null = null;
+    if (id !== 'create') {
+      southConnector = this.southConnectorRepository.findSouthById(id);
+      if (!southConnector) {
+        throw new Error(`South connector ${id} not found`);
+      }
+    }
+    const manifest = this.getInstalledSouthManifests().find(southManifest => southManifest.id === command.type);
+    if (!manifest) {
+      throw new Error(`South manifest ${command.type} not found`);
+    }
+
+    const testConnectorToRun: SouthConnectorEntity<SouthSettings, SouthItemSettings> = {
+      id: southConnector?.id || 'test',
+      ...command,
+      settings: await this.encryptionService.encryptConnectorSecrets<S>(
+        command.settings,
+        southConnector?.settings || null,
+        manifest.settings
+      ),
+      name: southConnector ? southConnector.name : `${command!.type}:browse-items`,
+      items: []
+    };
+
+    /* istanbul ignore next */
+    const mockedAddContent = async (_southId: string, _content: OIBusContent): Promise<void> => Promise.resolve();
+    const south = this.runSouth(testConnectorToRun, mockedAddContent, logger, {
+      cache: 'baseCacheFolder',
+      archive: 'baseArchiveFolder',
+      error: 'baseErrorFolder'
+    });
+
+    // Check if the connector has getAvailablePoints method
+    if ('getAvailablePoints' in south && typeof south.getAvailablePoints === 'function') {
+      return await south.getAvailablePoints(nameFilter, maxPoints);
+    } else {
+      throw new Error(`Connector type ${command.type} does not support browsing available items`);
+    }
   }
 
   findById<S extends SouthSettings, I extends SouthItemSettings>(southId: string): SouthConnectorEntity<S, I> | null {

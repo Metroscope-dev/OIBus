@@ -14,7 +14,7 @@ import {
   SouthConnectorManifest
 } from '../../../../../backend/shared/model/south-connector.model';
 import { EditSouthItemModalComponent } from '../edit-south-item-modal/edit-south-item-modal.component';
-import { debounceTime, distinctUntilChanged, firstValueFrom, of, switchMap, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, firstValueFrom, of, switchMap, tap, forkJoin } from 'rxjs';
 import { BoxComponent, BoxTitleDirective } from '../../shared/box/box.component';
 import { ScanModeDTO } from '../../../../../backend/shared/model/scan-mode.model';
 import { OibFormControl } from '../../../../../backend/shared/model/form.model';
@@ -195,21 +195,51 @@ export class SouthItemsComponent implements OnInit {
   private refreshAfterCreationModalClosed(modalRef: Modal<any>) {
     modalRef.result
       .pipe(
-        switchMap((command: SouthConnectorItemCommandDTO<SouthItemSettings>) => {
-          if (this.saveChangesDirectly()) {
-            return this.southConnectorService.createItem(this.southId(), command);
-          } else {
-            this.allItems.push({
-              id: command.id ?? null,
-              name: command.name,
-              enabled: command.enabled,
-              scanModeId: command.scanModeId!,
-              scanModeName: null,
-              settings: { ...command.settings }
-            });
-            return of(null);
+        switchMap(
+          (
+            result:
+              | SouthConnectorItemCommandDTO<SouthItemSettings>
+              | { selectAll: boolean; items: Array<SouthConnectorItemCommandDTO<SouthItemSettings>> }
+          ) => {
+            // Handle "select all" response
+            if ('selectAll' in result && result.selectAll) {
+              if (this.saveChangesDirectly()) {
+                // Create all items via API
+                const createRequests = result.items.map(item => this.southConnectorService.createItem(this.southId(), item));
+                return forkJoin(createRequests);
+              } else {
+                // Add all items to local array
+                result.items.forEach(command => {
+                  this.allItems.push({
+                    id: command.id ?? null,
+                    name: command.name,
+                    enabled: command.enabled,
+                    scanModeId: command.scanModeId!,
+                    scanModeName: null,
+                    settings: { ...command.settings }
+                  });
+                });
+                return of(null);
+              }
+            } else {
+              // Handle single item response
+              const command = result as SouthConnectorItemCommandDTO<SouthItemSettings>;
+              if (this.saveChangesDirectly()) {
+                return this.southConnectorService.createItem(this.southId(), command);
+              } else {
+                this.allItems.push({
+                  id: command.id ?? null,
+                  name: command.name,
+                  enabled: command.enabled,
+                  scanModeId: command.scanModeId!,
+                  scanModeName: null,
+                  settings: { ...command.settings }
+                });
+                return of(null);
+              }
+            }
           }
-        })
+        )
       )
       .subscribe(() => {
         if (this.saveChangesDirectly()) {

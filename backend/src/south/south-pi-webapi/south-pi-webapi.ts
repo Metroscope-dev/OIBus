@@ -4,35 +4,15 @@ import pino from 'pino';
 import { Instant } from '../../../shared/model/types';
 import { DateTime } from 'luxon';
 import { QueriesHistory } from '../south-interface';
+import { SouthPIWebAPIItemSettings, SouthPIWebAPISettings } from '../../../shared/model/south-settings.model';
 import { OIBusContent, OIBusTimeValue } from '../../../shared/model/engine.model';
 import { SouthConnectorEntity, SouthConnectorItemEntity, SouthThrottlingSettings } from '../../model/south-connector.model';
 import SouthConnectorRepository from '../../repository/config/south-connector.repository';
 import SouthCacheRepository from '../../repository/cache/south-cache.repository';
 import ScanModeRepository from '../../repository/config/scan-mode.repository';
 import { BaseFolders } from '../../model/types';
-import { SouthConnectorItemTestingSettings } from '../../../shared/model/south-connector.model';
+import { SouthConnectorItemTestingSettings, AvailablePoint } from '../../../shared/model/south-connector.model';
 import { HTTPRequest, ReqAuthOptions, ReqOptions } from '../../service/http-request.utils';
-
-// Define the settings interfaces locally since the generator isn't working
-export interface SouthPIWebAPISettings {
-  throttling: {
-    maxReadInterval: number;
-    readDelay: number;
-    overlap: number;
-    maxInstantPerItem: boolean;
-  };
-  url: string;
-  dataServerWebId: string;
-  username: string;
-  password: string | null;
-  acceptUnauthorized: boolean;
-  timeout: number;
-  retryInterval: number;
-}
-
-export interface SouthPIWebAPIItemSettings {
-  pointWebId: string;
-}
 
 interface PIWebAPIPoint {
   WebId: string;
@@ -145,18 +125,32 @@ export default class SouthPIWebAPI extends SouthConnector<SouthPIWebAPISettings,
 
   async testConnection(): Promise<void> {
     try {
+      // Validate required settings
+      if (!this.connector.settings.url) {
+        throw new Error('PI Web API URL is required');
+      }
+      if (!this.connector.settings.dataServerWebId) {
+        throw new Error('Data Server Web ID is required');
+      }
+      if (!this.connector.settings.username) {
+        throw new Error('Username is required');
+      }
+      if (!this.connector.settings.password) {
+        throw new Error('Password is required');
+      }
+
       const fetchOptions = this.createHttpOptions('GET');
       const requestUrl = new URL(
         `dataservers/${this.connector.settings.dataServerWebId}`,
         this.ensureUrlEndsWithSlash(this.connector.settings.url)
       );
-      
+
       const response = await HTTPRequest(requestUrl, fetchOptions);
-      
+
       if (!response.ok) {
         throw new Error(`PI Web API connection test failed with status ${response.statusCode}`);
       }
-      
+
       this.logger.info('PI Web API connection test successful');
     } catch (error) {
       throw new Error(`PI Web API connection test failed: ${error}`);
@@ -213,16 +207,16 @@ export default class SouthPIWebAPI extends SouthConnector<SouthPIWebAPISettings,
         });
 
         const batchResults = await Promise.all(batchPromises);
-        
+
         for (const { item, values } of batchResults) {
           // Add point ID to each value
           const valuesWithPointId = values.map(value => ({
             ...value,
             pointId: item.name
           }));
-          
+
           allValues.push(...valuesWithPointId);
-          
+
           // Track the maximum timestamp
           if (values.length > 0) {
             const itemMaxTimestamp = Math.max(...values.map(v => new Date(v.timestamp).getTime()));
@@ -241,7 +235,7 @@ export default class SouthPIWebAPI extends SouthConnector<SouthPIWebAPISettings,
       if (allValues.length > 0) {
         this.logger.debug(`Found ${allValues.length} results for ${items.length} items in ${requestDuration} ms`);
         await this.addContent({ type: 'time-values', content: allValues });
-        
+
         if (maxTimestamp > new Date(startTime).getTime()) {
           updatedStartTime = new Date(maxTimestamp).toISOString();
         }
@@ -257,22 +251,22 @@ export default class SouthPIWebAPI extends SouthConnector<SouthPIWebAPISettings,
 
   private async queryRecordedData(pointWebId: string, startTime: Instant, endTime: Instant): Promise<Array<OIBusTimeValue>> {
     const fetchOptions = this.createHttpOptions('GET');
-    
+
     // Build URL with query parameters
     const url = new URL(`streams/${pointWebId}/recorded`, this.ensureUrlEndsWithSlash(this.connector.settings.url));
     url.searchParams.set('startTime', startTime);
     url.searchParams.set('endTime', endTime);
     url.searchParams.set('maxCount', '10000'); // Reasonable limit
-    
+
     const response = await HTTPRequest(url, fetchOptions);
-    
+
     if (!response.ok) {
       const errorText = await response.body.text();
       throw new Error(`PI Web API query failed with status ${response.statusCode}: ${errorText}`);
     }
-    
+
     const data = (await response.body.json()) as PIWebAPIRecordedResponse;
-    
+
     return data.Items.map(item => {
       const value = typeof item.Value === 'boolean' ? (item.Value ? 1 : 0) : item.Value;
       return {
@@ -337,22 +331,43 @@ export default class SouthPIWebAPI extends SouthConnector<SouthPIWebAPISettings,
   /**
    * Get available points from the PI Web API data server
    * This can be used by the UI to allow users to select points
+   * @param nameFilter - Optional name filter (supports * wildcard like PI queries)
+   * @param maxPoints - Maximum number of points to return (default 1000)
    */
-  async getAvailablePoints(): Promise<Array<PIWebAPIPoint>> {
+  async getAvailablePoints(nameFilter?: string, maxPoints = 1000): Promise<Array<AvailablePoint>> {
     const fetchOptions = this.createHttpOptions('GET');
     const requestUrl = new URL(
       `dataservers/${this.connector.settings.dataServerWebId}/points`,
       this.ensureUrlEndsWithSlash(this.connector.settings.url)
     );
-    
+
+    // Add name filter if provided (PI Web API supports wildcards)
+    if (nameFilter) {
+      requestUrl.searchParams.set('nameFilter', nameFilter);
+    }
+
+    // Set max count to avoid overwhelming responses
+    requestUrl.searchParams.set('maxCount', maxPoints.toString());
+
     const response = await HTTPRequest(requestUrl, fetchOptions);
-    
+
     if (!response.ok) {
       const errorText = await response.body.text();
       throw new Error(`Failed to get PI Web API points with status ${response.statusCode}: ${errorText}`);
     }
-    
+
     const data = (await response.body.json()) as PIWebAPIPointsResponse;
-    return data.Items;
+
+    // Convert PI Web API points to generic AvailablePoint format
+    return data.Items.map(point => ({
+      id: point.WebId,
+      name: point.Name,
+      description: point.Descriptor || point.Path,
+      webId: point.WebId,
+      pointClass: point.PointClass,
+      pointType: point.PointType,
+      path: point.Path,
+      engineeringUnits: point.EngineeringUnits
+    }));
   }
 }

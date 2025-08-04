@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateDirective } from '@ngx-translate/core';
-import { SouthConnectorCommandDTO, SouthConnectorDTO } from '../../../../../backend/shared/model/south-connector.model';
+import { SouthConnectorCommandDTO, SouthConnectorDTO, AvailablePoint } from '../../../../../backend/shared/model/south-connector.model';
 
 import { SouthConnectorService } from '../../services/south-connector.service';
 import { NorthConnectorCommandDTO, NorthConnectorDTO } from '../../../../../backend/shared/model/north-connector.model';
@@ -27,6 +27,8 @@ export class TestConnectionResultModalComponent {
   success = false;
   error: string | null = null;
   connector: SouthConnectorDTO<SouthSettings, SouthItemSettings> | NorthConnectorDTO<NorthSettings> | null = null;
+  availablePoints: Array<AvailablePoint> = [];
+  showAvailablePoints = false;
 
   /**
    * Prepares the component for creation.
@@ -56,6 +58,29 @@ export class TestConnectionResultModalComponent {
       next: () => {
         this.success = true;
         this.loading = false;
+
+        // If this is a PI Web API connector, also try to browse available points
+        if (this.type === 'south') {
+          const southCommand = command as SouthConnectorCommandDTO<SouthSettings, SouthItemSettings>;
+          if (southCommand.type === 'osisoft-pi-webapi') {
+            this.browseAvailablePoints(southCommand);
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Browse available points for connectors that support it (like PI Web API)
+   */
+  browseAvailablePoints(command: SouthConnectorCommandDTO<SouthSettings, SouthItemSettings>) {
+    this.southConnectorService.browseAvailableItems(this.connector?.id || 'create', command).subscribe({
+      error: () => {
+        // Don't show error for browse points, just ignore it silently
+      },
+      next: (points: Array<AvailablePoint>) => {
+        this.availablePoints = points;
+        this.showAvailablePoints = points.length > 0;
       }
     });
   }
@@ -99,5 +124,9 @@ export class TestConnectionResultModalComponent {
 
   cancel() {
     this.modal.dismiss();
+  }
+
+  selectPoint(point: AvailablePoint) {
+    this.modal.close(point);
   }
 }
