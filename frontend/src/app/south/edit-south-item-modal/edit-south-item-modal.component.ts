@@ -259,17 +259,44 @@ export class EditSouthItemModalComponent {
   }
 
   save() {
-    if (!this.form!.valid) {
-      return;
-    }
-
-    // If we have batch selected points, return them for batch creation
+    // In batch mode, we don't need the form to be valid since we're using pre-built batch items
     if (this.selectedPointsForBatch.length > 0) {
       this.modal.close({ selectAll: true, items: this.selectedPointsForBatch });
       return;
     }
 
+    // For single items, validate the form
+    if (!this.form!.valid) {
+      return;
+    }
+
     this.modal.close(this.formItem);
+  }
+
+  get isBatchMode(): boolean {
+    return this.selectedPointsForBatch.length > 0;
+  }
+
+  get testableItem(): SouthConnectorItemCommandDTO<SouthItemSettings> {
+    // In batch mode, create a test item using the first selected point but with current form settings
+    if (this.isBatchMode && this.selectedPointsForBatch.length > 0) {
+      const formValue = this.form!.value;
+      const firstBatchItem = this.selectedPointsForBatch[0];
+
+      return {
+        id: null,
+        enabled: formValue.enabled!,
+        name: firstBatchItem.name,
+        scanModeId: firstBatchItem.scanModeId!,
+        scanModeName: null,
+        settings: {
+          ...formValue.settings!,
+          ...(firstBatchItem.settings as any)
+        }
+      };
+    }
+    // Otherwise, use the current form item
+    return this.formItem;
   }
 
   get formItem(): SouthConnectorItemCommandDTO<SouthItemSettings> {
@@ -280,7 +307,7 @@ export class EditSouthItemModalComponent {
     }
 
     const settings = { ...formValue.settings! };
-    
+
     // For PI Web API, add the selected point's webId
     if (this.southManifest?.id === 'osisoft-pi-webapi' && this.selectedPoint) {
       settings.pointWebId = this.selectedPoint.webId || this.selectedPoint.id;
@@ -327,27 +354,30 @@ export class EditSouthItemModalComponent {
     // Store the selected point for later use
     this.selectedPoint = point;
 
-    // Check if form is initialized before accessing controls
-    if (!this.form) {
-      return;
-    }
+    // Use setTimeout to ensure form controls are fully initialized
+    setTimeout(() => {
+      // Check if form is initialized before accessing controls
+      if (!this.form) {
+        return;
+      }
 
-    // Set the name to the point name
-    const nameControl = this.form.get('name');
-    if (nameControl) {
-      nameControl.setValue(point.name);
-    }
+      // Set the name to the point name
+      const nameControl = this.form.get('name');
+      if (nameControl) {
+        nameControl.setValue(point.name);
+      }
 
-    // Update the form settings to include the pointWebId
-    const settingsControl = this.form.get('settings');
-    if (settingsControl) {
-      const currentSettings = settingsControl.value || {};
-      settingsControl.setValue({
-        ...currentSettings,
-        pointWebId: point.webId || point.id
-      });
-      settingsControl.markAsDirty();
-    }
+      // Update the form settings to include the pointWebId
+      const settingsControl = this.form.get('settings');
+      if (settingsControl) {
+        const currentSettings = settingsControl.value || {};
+        settingsControl.setValue({
+          ...currentSettings,
+          pointWebId: point.webId || point.id
+        });
+        settingsControl.markAsDirty();
+      }
+    }, 0);
   }
 
   selectAllItems() {
@@ -355,19 +385,30 @@ export class EditSouthItemModalComponent {
       return;
     }
 
+    // Get current form values to use for all batch items
+    const formValue = this.form!.value;
+    const defaultScanModeId = this.southItemSchema!.scanMode === 'SUBSCRIPTION' ? 'subscription' : formValue.scanModeId || 'subscription';
+
     // Store all points for batch creation
     this.selectedPointsForBatch = this.availablePoints.map(point => ({
       id: null,
-      enabled: true,
+      enabled: formValue.enabled || true,
       name: point.name,
-      scanModeId: this.southItemSchema!.scanMode === 'SUBSCRIPTION' ? 'subscription' : this.form?.get('scanModeId')?.value || null,
+      scanModeId: defaultScanModeId,
       scanModeName: null,
       settings: {
+        ...formValue.settings!,
         pointWebId: point.webId || point.id
-      }
+      } as any
     }));
 
     // Show confirmation message
-    this.batchSelectionMessage = `Selected ${this.availablePoints.length} items for batch creation. Save to add all items.`;
+    this.batchSelectionMessage = `Selected ${this.availablePoints.length} items for batch creation. You can save to add all items, or clear selection to test individual items.`;
+  }
+
+  clearBatchSelection() {
+    this.selectedPointsForBatch = [];
+    this.batchSelectionMessage = '';
+    this.selectedPoint = null;
   }
 }

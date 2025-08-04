@@ -10,7 +10,9 @@
       @for (item of tableView.content; track $index) {
         <div class="grid-table-row">
           <div class="align-items-center d-flex h-100 p-2">{{ item.timestamp }}</div>
-          <div class="align-items-center d-flex h-100 p-2">{{ item.pointId }}</div>
+          <div class="align-items-center d-flex h-100 p-2">
+            <oib-truncated-string [string]="item.pointId" [maxLength]="30" />
+          </div>
           <div class="align-items-center d-flex h-100 p-2" style="overflow-wrap: anywhere">{{ convertDataToString(item.data).value }}</div>
           <div class="align-items-center d-flex h-100 p-2">
             <code class="json-content">{{ convertDataToString(item.data).other }}</code>

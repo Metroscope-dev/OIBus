@@ -111,20 +111,29 @@
                 {{ browseError }}
               </div>
             }
-            
+
             @if (batchSelectionMessage) {
-              <div class="alert alert-success mt-2">
-                {{ batchSelectionMessage }}
+              <div class="alert alert-success mt-2 d-flex justify-content-between align-items-center">
+                <span>{{ batchSelectionMessage }}</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="clearBatchSelection()">
+                  <span translate="south.items.browse-items.clear-selection"></span>
+                </button>
               </div>
             }
           </div>
         </div>
       }
     </form>
+    @if (isBatchMode) {
+      <div class="alert alert-info mt-3">
+        <strong translate="south.items.batch-mode.title"></strong>
+        <p translate="south.items.batch-mode.test-description"></p>
+      </div>
+    }
     <oib-south-item-test
       type="south"
       [entityId]="southId"
-      [item]="formItem"
+      [item]="testableItem"
       [connectorCommand]="southConnectorCommand"
       [manifest]="southManifest"
     />

@@ -6,13 +6,14 @@ import { emptyPage } from '../../../../shared/test-utils';
 import { PaginationComponent } from '../../../../shared/pagination/pagination.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BaseItemTestResult } from '../item-test-result.interface';
+import { TruncatedStringComponent } from '../../../../shared/truncated-string/truncated-string.component';
 import Papa from 'papaparse';
 
 const PAGE_SIZE = 10;
 
 @Component({
   selector: 'oib-item-test-table-result',
-  imports: [PaginationComponent, TranslatePipe],
+  imports: [PaginationComponent, TranslatePipe, TruncatedStringComponent],
   templateUrl: './item-test-table-result.component.html',
   styleUrl: './item-test-table-result.component.scss'
 })

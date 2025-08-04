@@ -121,7 +121,16 @@ const manifest: SouthConnectorManifest = {
   ],
   items: {
     scanMode: 'POLL',
-    settings: []
+    settings: [
+      {
+        key: 'pointWebId',
+        type: 'OibText',
+        translationKey: 'south.osisoft-pi-webapi.point-web-id',
+        validators: [{ key: 'required' }],
+        displayInViewMode: false,
+        class: 'col-12 d-none' // Hidden field - set programmatically
+      }
+    ]
   }
 };
 export default manifest;
