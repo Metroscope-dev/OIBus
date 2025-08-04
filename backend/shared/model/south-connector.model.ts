@@ -19,6 +19,7 @@ export const OIBUS_SOUTH_TYPES = [
   'opcua',
   'oracle',
   'osisoft-pi',
+  'osisoft-pi-webapi',
   'postgresql',
   'sftp',
   'sqlite'

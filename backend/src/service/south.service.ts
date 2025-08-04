@@ -29,6 +29,7 @@ import sqliteManifest from '../south/south-sqlite/manifest';
 import opcManifest from '../south/south-opc/manifest';
 import oledbManifest from '../south/south-oledb/manifest';
 import piManifest from '../south/south-pi/manifest';
+import piWebAPIManifest from '../south/south-pi-webapi/manifest';
 import sftpManifest from '../south/south-sftp/manifest';
 import ConnectionService from './connection.service';
 import { OIBusContent } from '../../shared/model/engine.model';
@@ -96,6 +97,7 @@ import SouthOPC from '../south/south-opc/south-opc';
 import SouthOPCUA from '../south/south-opcua/south-opcua';
 import SouthOracle from '../south/south-oracle/south-oracle';
 import SouthPI from '../south/south-pi/south-pi';
+import SouthPIWebAPI, { SouthPIWebAPISettings, SouthPIWebAPIItemSettings } from '../south/south-pi-webapi/south-pi-webapi';
 import SouthPostgreSQL from '../south/south-postgresql/south-postgresql';
 import SouthSFTP from '../south/south-sftp/south-sftp';
 import SouthSQLite from '../south/south-sqlite/south-sqlite';
@@ -121,6 +123,7 @@ export const southManifestList: Array<SouthConnectorManifest> = [
   modbusManifest,
   oianalyticsManifest,
   piManifest,
+  piWebAPIManifest,
   sftpManifest
 ];
 
@@ -287,6 +290,17 @@ export default class SouthService {
       case 'osisoft-pi':
         return new SouthPI(
           settings as SouthConnectorEntity<SouthPISettings, SouthPIItemSettings>,
+          addContent,
+          this.encryptionService,
+          this.southConnectorRepository,
+          this.southCacheRepository,
+          this.scanModeRepository,
+          logger,
+          southBaseFolders
+        );
+      case 'osisoft-pi-webapi':
+        return new SouthPIWebAPI(
+          settings as SouthConnectorEntity<SouthPIWebAPISettings, SouthPIWebAPIItemSettings>,
           addContent,
           this.encryptionService,
           this.southConnectorRepository,
