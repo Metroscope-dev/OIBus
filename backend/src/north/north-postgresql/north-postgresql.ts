@@ -37,11 +37,6 @@ export default class NorthPostgreSQL extends NorthConnector<NorthPostgreSQLSetti
         database: this.connector.settings.database,
         user: this.connector.settings.username,
         password: this.connector.settings.password ? await this.encryptionService.decryptText(this.connector.settings.password) : undefined,
-        ssl: this.connector.settings.useSSL
-          ? {
-              rejectUnauthorized: this.connector.settings.rejectUnauthorized
-            }
-          : false,
         max: 10, // maximum number of clients in the pool
         idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
         connectionTimeoutMillis: this.connector.settings.connectionTimeout * 1000
@@ -221,11 +216,6 @@ export default class NorthPostgreSQL extends NorthConnector<NorthPostgreSQLSetti
       user: this.connector.settings.username,
       password: this.connector.settings.password ? await this.encryptionService.decryptText(this.connector.settings.password) : undefined,
       connectionTimeoutMillis: this.connector.settings.connectionTimeout * 1000,
-      ssl: this.connector.settings.useSSL
-        ? {
-            rejectUnauthorized: this.connector.settings.rejectUnauthorized
-          }
-        : false
     };
 
     const client = new Client(connectionConfig);

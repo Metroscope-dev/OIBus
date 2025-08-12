@@ -93,25 +93,6 @@ const manifest: NorthConnectorManifest = {
       class: 'col-3'
     },
     {
-      key: 'useSSL',
-      type: 'OibCheckbox',
-      translationKey: 'north.postgresql.use-ssl',
-      defaultValue: false,
-      displayInViewMode: true,
-      validators: [{ key: 'required' }],
-      class: 'col-3'
-    },
-    {
-      key: 'rejectUnauthorized',
-      type: 'OibCheckbox',
-      translationKey: 'north.postgresql.reject-unauthorized',
-      defaultValue: true,
-      displayInViewMode: true,
-      validators: [{ key: 'required' }],
-      conditionalDisplay: { field: 'useSSL', values: [true] },
-      class: 'col-3'
-    },
-    {
       key: 'customIndexes',
       type: 'OibArray',
       translationKey: 'north.postgresql.custom-indexes.custom-index',
