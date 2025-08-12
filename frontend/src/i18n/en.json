@@ -198,6 +198,7 @@
       "console": "Console",
       "file-writer": "File writer",
       "oianalytics": "OIAnalytics®",
+      "postgresql": "PostgreSQL®",
       "sftp": "SFTP",
       "rest": "REST",
       "metroscope-lithium": "Metroscope Lithium"
@@ -208,6 +209,7 @@
       "console": "Display filenames or values in Console (used for debug)",
       "file-writer": "Write files and data to the output folder",
       "oianalytics": "Send files and values to OIAnalytics®",
+      "postgresql": "Send time-series data to a PostgreSQL® database. Supports numeric values and digital values (e.g., ?28)",
       "sftp": "Upload files and data to an SFTP server",
       "rest": "Upload files to a REST endpoint",
       "metroscope-lithium": "Send data to a Metroscope Lithium endpoint"
@@ -1726,6 +1728,24 @@
       "timeout": "Timeout",
       "group": "Group",
       "label": "Label"
+    },
+    "postgresql": {
+      "host": "Host",
+      "port": "Port",
+      "database": "Database",
+      "username": "Username",
+      "password": "Password",
+      "table": "Table name",
+      "create-table-if-not-exists": "Create table",
+      "batch-size": "Number of records to insert in a single transaction (improves performance)",
+      "connection-timeout": "Connection timeout",
+      "custom-indexes": {
+        "custom-index": "Custom database indexes",
+        "name": "Index name",
+        "column.title": "Database column to index",
+        "unique": "Unique constraint",
+        "order.title": "Sort order for the index"
+      }
     }
   },
   "logs": {

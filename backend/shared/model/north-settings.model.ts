@@ -37,6 +37,13 @@ export interface NorthRESTSettingsQueryParams {
   value: string;
 }
 
+export interface NorthPostgreSQLSettingsCustomIndexes {
+  name: string;
+  column: string;
+  unique: boolean;
+  order: string;
+}
+
 export interface NorthAmazonS3Settings {
   bucket: string;
   region: string;
@@ -94,6 +101,19 @@ export interface NorthOIAnalyticsSettings {
   specificSettings?: NorthOIAnalyticsSettingsSpecificSettings | null;
 }
 
+export interface NorthPostgreSQLSettings {
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string | null;
+  table: string;
+  createTableIfNotExists: boolean;
+  batchSize: number;
+  connectionTimeout: number;
+  customIndexes: Array<NorthPostgreSQLSettingsCustomIndexes> | null;
+}
+
 export interface NorthRESTSettings {
   endpoint: string;
   testPath: string;
@@ -129,5 +149,6 @@ export type NorthSettings =
   | NorthFileWriterSettings
   | NorthMetroscopeLithiumSettings
   | NorthOIAnalyticsSettings
+  | NorthPostgreSQLSettings
   | NorthRESTSettings
   | NorthSFTPSettings;

@@ -16,6 +16,7 @@ import amazonManifest from '../north/north-amazon-s3/manifest';
 import sftpManifest from '../north/north-sftp/manifest';
 import restManifest from '../north/north-rest/manifest';
 import metroscopeLithiumManifest from '../north/north-metroscope-lithium/manifest';
+import postgresqlManifest from '../north/north-postgresql/manifest';
 import { NorthConnectorEntity, NorthConnectorEntityLight } from '../model/north-connector.model';
 import JoiValidator from '../web-server/controllers/validators/joi.validator';
 import NorthConnectorRepository from '../repository/config/north-connector.repository';
@@ -34,6 +35,7 @@ import {
   NorthFileWriterSettings,
   NorthMetroscopeLithiumSettings,
   NorthOIAnalyticsSettings,
+  NorthPostgreSQLSettings,
   NorthRESTSettings,
   NorthSettings,
   NorthSFTPSettings
@@ -44,6 +46,7 @@ import NorthAmazonS3 from '../north/north-amazon-s3/north-amazon-s3';
 import NorthAzureBlob from '../north/north-azure-blob/north-azure-blob';
 import NorthFileWriter from '../north/north-file-writer/north-file-writer';
 import NorthMetroscopeLithium from '../north/north-metroscope-lithium/north-metroscope-lithium';
+import NorthPostgreSQL from '../north/north-postgresql/north-postgresql';
 import NorthOIAnalytics from '../north/north-oianalytics/north-oianalytics';
 import NorthSFTP from '../north/north-sftp/north-sftp';
 import NorthREST from '../north/north-rest/north-rest';
@@ -63,6 +66,7 @@ export const northManifestList: Array<NorthConnectorManifest> = [
   amazonManifest,
   fileWriterManifest,
   metroscopeLithiumManifest,
+  postgresqlManifest,
   sftpManifest,
   restManifest
 ];
@@ -149,6 +153,15 @@ export default class NorthService {
       case 'metroscope-lithium':
         return new NorthMetroscopeLithium(
           settings as NorthConnectorEntity<NorthMetroscopeLithiumSettings>,
+          this.encryptionService,
+          this.northConnectorRepository,
+          this.scanModeRepository,
+          logger,
+          northBaseFolders
+        );
+      case 'postgresql':
+        return new NorthPostgreSQL(
+          settings as NorthConnectorEntity<NorthPostgreSQLSettings>,
           this.encryptionService,
           this.northConnectorRepository,
           this.scanModeRepository,
