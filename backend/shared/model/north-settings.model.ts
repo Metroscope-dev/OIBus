@@ -78,6 +78,15 @@ export interface NorthFileWriterSettings {
   suffix: string | null;
 }
 
+export interface NorthMetroscopeLithiumSettings {
+  endpoint: string;
+  apiKey: string | null;
+  sourceId: string;
+  group: string;
+  label: string | null;
+  timeout: number;
+}
+
 export interface NorthOIAnalyticsSettings {
   useOiaModule: boolean;
   timeout: number;
@@ -118,6 +127,7 @@ export type NorthSettings =
   | NorthAzureBlobSettings
   | NorthConsoleSettings
   | NorthFileWriterSettings
+  | NorthMetroscopeLithiumSettings
   | NorthOIAnalyticsSettings
   | NorthRESTSettings
   | NorthSFTPSettings;
