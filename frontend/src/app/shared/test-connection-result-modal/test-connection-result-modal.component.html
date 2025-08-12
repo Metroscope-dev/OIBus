@@ -22,7 +22,6 @@
                   <tr>
                     <th>Name</th>
                     <th>Description</th>
-                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -30,9 +29,6 @@
                     <tr>
                       <td>{{ point.name }}</td>
                       <td>{{ point.description || point.path || '-' }}</td>
-                      <td>
-                        <button class="btn btn-sm btn-primary" (click)="selectPoint(point)" type="button">Select</button>
-                      </td>
                     </tr>
                   }
                 </tbody>
