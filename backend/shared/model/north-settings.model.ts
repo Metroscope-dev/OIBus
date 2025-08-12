@@ -115,8 +115,6 @@ export interface NorthPostgreSQLSettings {
   createTableIfNotExists: boolean;
   batchSize: number;
   connectionTimeout: number;
-  useSSL: boolean;
-  rejectUnauthorized: boolean;
   customIndexes: Array<NorthPostgreSQLSettingsCustomIndexes> | null;
 }
 

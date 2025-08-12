@@ -1781,8 +1781,6 @@
       "create-table-if-not-exists": "Create table",
       "batch-size": "Number of records to insert in a single transaction (improves performance)",
       "connection-timeout": "Connection timeout",
-      "use-ssl": "Use SSL",
-      "reject-unauthorized": "Reject unauthorized SSL certificates",
       "custom-indexes": {
         "custom-index": "Custom database indexes",
         "name": "Index name",

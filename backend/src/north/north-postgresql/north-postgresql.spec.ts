@@ -46,8 +46,6 @@ const settings: NorthPostgreSQLSettings = {
   createTableIfNotExists: true,
   batchSize: 1000,
   connectionTimeout: 30,
-  useSSL: false,
-  rejectUnauthorized: true,
   customIndexes: [
     {
       name: 'timestamp_desc',
@@ -155,33 +153,6 @@ describe('NorthPostgreSQL', () => {
       expect(mockPool.connect).toHaveBeenCalled();
       expect(mockClient.query).toHaveBeenCalledTimes(4); // CREATE TABLE, CREATE DEFAULT INDEX, and 2 custom indexes
       expect(mockClient.release).toHaveBeenCalled();
-    });
-
-    it('should create table with SSL enabled', async () => {
-      const sslSettings = { ...settings, useSSL: true, rejectUnauthorized: false };
-      const sslConfiguration = { ...configuration, settings: sslSettings };
-      const sslNorth = new NorthPostgreSQL(
-        sslConfiguration,
-        encryptionService,
-        northConnectorRepository,
-        scanModeRepository,
-        logger,
-        mockBaseFolders(testData.north.list[0].id)
-      );
-
-      await sslNorth.connect();
-
-      expect(Pool).toHaveBeenCalledWith({
-        host: 'localhost',
-        port: 5432,
-        database: 'test_db',
-        user: 'test_user',
-        password: 'decrypted_password',
-        ssl: { rejectUnauthorized: false },
-        max: 10,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 30000
-      });
     });
 
     it('should skip table creation when createTableIfNotExists is false', async () => {
