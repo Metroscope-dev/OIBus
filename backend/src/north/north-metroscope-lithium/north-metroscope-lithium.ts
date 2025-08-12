@@ -10,7 +10,7 @@ import NorthConnectorRepository from '../../repository/config/north-connector.re
 import ScanModeRepository from '../../repository/config/scan-mode.repository';
 import { BaseFolders } from '../../model/types';
 import { OIBusError } from '../../model/engine.model';
-import { HTTPRequest, ReqProxyOptions, ReqResponse, retryableHttpStatusCodes } from '../../service/http-request.utils';
+import { HTTPRequest, ReqResponse, retryableHttpStatusCodes } from '../../service/http-request.utils';
 
 /**
  * Interface for sensor values in the Metroscope Lithium API
@@ -171,7 +171,6 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
         method: 'PATCH',
         headers,
         body: JSON.stringify(payload),
-        proxy: this.getProxyOptions(),
         timeout: this.connector.settings.timeout * 1000
       });
       const duration = Date.now() - startTime;
@@ -250,7 +249,6 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
         method: 'PATCH',
         headers,
         body: JSON.stringify(testPayload),
-        proxy: this.getProxyOptions(),
         timeout: this.connector.settings.timeout * 1000
       });
       const duration = Date.now() - startTime;
@@ -328,33 +326,6 @@ export default class NorthMetroscopeLithium extends NorthConnector<NorthMetrosco
       this.logger.error(`Failed to parse timestamp "${timestamp}": ${error}`);
       throw new OIBusError(`Invalid timestamp format: ${timestamp}. Expected ISO 8601 format.`, false);
     }
-  }
-
-  /**
-   * Get proxy options if proxy is enabled
-   * @throws Error if no proxy url is specified in settings
-   */
-  private getProxyOptions(): ReqProxyOptions | undefined {
-    if (!this.connector.settings.useProxy) {
-      return;
-    }
-    if (!this.connector.settings.proxyUrl) {
-      throw new Error('Proxy URL not specified');
-    }
-
-    const options: ReqProxyOptions = {
-      url: this.connector.settings.proxyUrl
-    };
-
-    if (this.connector.settings.proxyUsername) {
-      options.auth = {
-        type: 'basic',
-        username: this.connector.settings.proxyUsername,
-        password: this.connector.settings.proxyPassword
-      };
-    }
-
-    return options;
   }
 
   /**

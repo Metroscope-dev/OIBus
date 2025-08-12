@@ -58,34 +58,6 @@ const manifest: NorthConnectorManifest = {
       unitLabel: 's',
       validators: [{ key: 'required' }],
       class: 'col-6'
-    },
-    {
-      key: 'useProxy',
-      translationKey: 'north.metroscope-lithium.use-proxy',
-      type: 'OibCheckbox',
-      newRow: true,
-      defaultValue: false,
-      displayInViewMode: true,
-      validators: [{ key: 'required' }]
-    },
-    {
-      key: 'proxyUrl',
-      translationKey: 'north.metroscope-lithium.proxy-url',
-      type: 'OibText',
-      validators: [{ key: 'required' }],
-      conditionalDisplay: { field: 'useProxy', values: [true] }
-    },
-    {
-      key: 'proxyUsername',
-      translationKey: 'north.metroscope-lithium.proxy-username',
-      type: 'OibText',
-      conditionalDisplay: { field: 'useProxy', values: [true] }
-    },
-    {
-      key: 'proxyPassword',
-      translationKey: 'north.metroscope-lithium.proxy-password',
-      type: 'OibSecret',
-      conditionalDisplay: { field: 'useProxy', values: [true] }
     }
   ]
 };

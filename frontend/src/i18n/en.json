@@ -1727,11 +1727,7 @@
       "source-id": "Source ID",
       "timeout": "Timeout",
       "group": "Group",
-      "label": "Label",
-      "use-proxy": "Use proxy",
-      "proxy-url": "Proxy URL",
-      "proxy-username": "Proxy username",
-      "proxy-password": "Proxy password"
+      "label": "Label"
     },
     "postgresql": {
       "host": "Host",
