@@ -92,10 +92,6 @@ export interface NorthMetroscopeLithiumSettings {
   group: string;
   label: string | null;
   timeout: number;
-  useProxy: boolean;
-  proxyUrl?: string;
-  proxyUsername?: string | null;
-  proxyPassword?: string | null;
 }
 
 export interface NorthOIAnalyticsSettings {
