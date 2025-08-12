@@ -36,8 +36,7 @@ const settings: NorthMetroscopeLithiumSettings = {
   sourceId: 'oibus-test',
   group: 'cycle',
   label: 'test-label',
-  timeout: 30,
-  useProxy: false
+  timeout: 30
 };
 
 const timeValues: Array<OIBusTimeValue> = [
@@ -430,63 +429,6 @@ describe('NorthMetroscopeLithium', () => {
     ).rejects.toThrow(new OIBusError('Metroscope Lithium connector only supports time values, not raw files', false));
 
     expect(HTTPRequest).not.toHaveBeenCalled();
-  });
-
-  describe('with proxy', () => {
-    beforeEach(async () => {
-      configuration.settings = {
-        ...settings,
-        useProxy: true,
-        proxyUrl: 'http://localhost:8080',
-        proxyUsername: 'proxy-user',
-        proxyPassword: 'proxy-password'
-      };
-      await north.start(); // Reload config
-    });
-
-    it('should use proxy when configured', async () => {
-      await north.testConnection();
-
-      const expectedReqOptions = {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          APIKEY: 'test-api-key'
-        },
-        body: JSON.stringify({
-          sourceId: 'oibus-test',
-          snapshots: []
-        }),
-        proxy: {
-          url: 'http://localhost:8080',
-          auth: {
-            type: 'basic',
-            username: 'proxy-user',
-            password: 'proxy-password'
-          }
-        },
-        timeout: 30000
-      };
-
-      expect(HTTPRequest).toHaveBeenCalledWith(new URL(endpoint), expectedReqOptions);
-    });
-
-    it('should throw error when proxy url is not defined', async () => {
-      configuration.settings.proxyUrl = undefined;
-      await north.start(); // Reload config
-
-      await expect(
-        north.handleContent({
-          contentFile: '/path/to/file/example-123.json',
-          contentSize: 1234,
-          numberOfElement: 3,
-          createdAt: '2020-02-02T02:02:02.222Z',
-          contentType: 'time-values',
-          source: 'south',
-          options: {}
-        })
-      ).rejects.toThrow(new OIBusError(`Failed to reach Metroscope Lithium endpoint ${endpoint}; message: Proxy URL not specified`, true));
-    });
   });
 
   describe('error message handling', () => {
