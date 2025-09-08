@@ -19,6 +19,7 @@ export const OIBUS_SOUTH_TYPES = [
   'opcua',
   'oracle',
   'osisoft-pi',
+  'osisoft-pi-webapi',
   'postgresql',
   'sftp',
   'sqlite'
@@ -117,4 +118,18 @@ export interface SouthCache {
   scanModeId: string;
   itemId: string;
   maxInstant: Instant;
+}
+
+export interface AvailablePoint {
+  id: string;
+  name: string;
+  description?: string;
+  // PI Web API specific properties
+  webId?: string;
+  pointClass?: string;
+  pointType?: string;
+  path?: string;
+  engineeringUnits?: string;
+  // Generic index signature for connector-specific properties
+  [key: string]: string | number | boolean | undefined;
 }

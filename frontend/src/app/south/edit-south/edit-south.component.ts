@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 
 import { TranslateDirective } from '@ngx-translate/core';
 import {
+  AvailablePoint,
   OIBusSouthType,
   SouthConnectorCommandDTO,
   SouthConnectorDTO,
@@ -194,6 +195,25 @@ export class EditSouthComponent implements OnInit, CanComponentDeactivate {
       const modalRef = this.modalService.open(TestConnectionResultModalComponent);
       const component: TestConnectionResultModalComponent = modalRef.componentInstance;
       component.runTest('south', this.southConnector, this.formSouthConnectorCommand);
+
+      // Handle point selection for PI Web API connectors
+      modalRef.result.subscribe({
+        next: (selectedPoint: AvailablePoint) => {
+          if (selectedPoint && this.formSouthConnectorCommand.type === 'osisoft-pi-webapi') {
+            // Navigate to add new item with pre-filled data
+            this.router.navigate(['south-items', 'create'], {
+              relativeTo: this.route,
+              queryParams: {
+                pointName: selectedPoint.name,
+                webId: selectedPoint['webId'] || selectedPoint.id
+              }
+            });
+          }
+        },
+        error: () => {
+          // Modal was dismissed, do nothing
+        }
+      });
     }
   }
 

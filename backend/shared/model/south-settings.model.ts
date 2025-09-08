@@ -572,6 +572,7 @@ export type SouthSettings =
   | SouthOPCUASettings
   | SouthOracleSettings
   | SouthPISettings
+  | SouthPIWebAPISettings
   | SouthPostgreSQLSettings
   | SouthSFTPSettings
   | SouthSQLiteSettings;
@@ -830,6 +831,28 @@ export interface SouthPIItemSettings {
   piQuery?: string;
 }
 
+export interface SouthPIWebAPISettingsThrottling {
+  maxReadInterval: number;
+  readDelay: number;
+  overlap: number;
+  maxInstantPerItem: boolean;
+}
+
+export interface SouthPIWebAPISettings {
+  throttling: SouthPIWebAPISettingsThrottling;
+  url: string;
+  dataServerWebId: string;
+  username: string;
+  password: string | null;
+  acceptUnauthorized: boolean;
+  timeout: number;
+  retryInterval: number;
+}
+
+export interface SouthPIWebAPIItemSettings {
+  pointWebId: string;
+}
+
 export interface SouthPostgreSQLItemSettings {
   query: string;
   dateTimeFields: Array<SouthPostgreSQLItemSettingsDateTimeFields> | null;
@@ -864,6 +887,7 @@ export type SouthItemSettings =
   | SouthOPCUAItemSettings
   | SouthOracleItemSettings
   | SouthPIItemSettings
+  | SouthPIWebAPIItemSettings
   | SouthPostgreSQLItemSettings
   | SouthSFTPItemSettings
   | SouthSQLiteItemSettings;

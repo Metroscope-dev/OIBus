@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import {
+  AvailablePoint,
   SouthConnectorCommandDTO,
   SouthConnectorDTO,
   SouthConnectorManifest,
@@ -260,6 +261,25 @@ export class SouthConnectorService {
 
   testConnection(southId: string, settings: SouthConnectorCommandDTO<SouthSettings, SouthItemSettings>): Observable<void> {
     return this.http.put<void>(`/api/south/${southId}/test-connection`, settings);
+  }
+
+  browseAvailableItems(
+    southId: string,
+    settings: SouthConnectorCommandDTO<SouthSettings, SouthItemSettings>,
+    params?: { nameFilter?: string; maxPoints?: number }
+  ): Observable<Array<AvailablePoint>> {
+    let url = `/api/south/${southId}/browse-items`;
+    if (params?.nameFilter || params?.maxPoints) {
+      const queryParams = new URLSearchParams();
+      if (params.nameFilter) {
+        queryParams.set('nameFilter', params.nameFilter);
+      }
+      if (params.maxPoints) {
+        queryParams.set('maxPoints', params.maxPoints.toString());
+      }
+      url += `?${queryParams.toString()}`;
+    }
+    return this.http.put<Array<AvailablePoint>>(url, settings);
   }
 
   startSouth(southId: string): Observable<void> {
