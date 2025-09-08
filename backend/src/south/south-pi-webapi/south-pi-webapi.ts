@@ -192,28 +192,21 @@ export default class SouthPIWebAPI extends SouthConnector<SouthPIWebAPISettings,
     let maxTimestamp = new Date(startTime).getTime();
 
     try {
-      // Process items in parallel with dynamic batch sizing based on item count
-      // More items = larger batches for better performance, but not too large to avoid timeouts
-      const dynamicBatchSize = Math.min(Math.max(Math.ceil(items.length / 10), 5), 50);
-      this.logger.debug(`Processing ${items.length} items in batches of ${dynamicBatchSize}`);
-      
-      for (let i = 0; i < items.length; i += dynamicBatchSize) {
-        const batch = items.slice(i, i + dynamicBatchSize);
-        this.logger.debug(`Processing batch ${Math.floor(i / dynamicBatchSize) + 1}/${Math.ceil(items.length / dynamicBatchSize)}`);
-        
+      // Process items in parallel but with some throttling to avoid overwhelming the API
+      const batchSize = 10;
+      for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
         const batchPromises = batch.map(async item => {
           try {
             const values = await this.queryRecordedData(item.settings.pointWebId, startTime, endTime);
-            return { item, values, success: true };
+            return { item, values };
           } catch (error) {
             this.logger.error(`Error querying item ${item.name}: ${error}`);
-            return { item, values: [], success: false };
+            return { item, values: [] };
           }
         });
 
         const batchResults = await Promise.all(batchPromises);
-        const successCount = batchResults.filter(r => r.success).length;
-        this.logger.debug(`Batch completed: ${successCount}/${batch.length} items successful`);
 
         for (const { item, values } of batchResults) {
           // Add point ID to each value
@@ -232,7 +225,7 @@ export default class SouthPIWebAPI extends SouthConnector<SouthPIWebAPISettings,
         }
 
         // Add delay between batches to respect API limits
-        if (i + dynamicBatchSize < items.length) {
+        if (i + batchSize < items.length) {
           await new Promise(resolve => setTimeout(resolve, this.connector.settings.throttling.readDelay));
         }
       }
